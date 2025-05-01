@@ -1,10 +1,6 @@
 {
-  "name": "Gerenciador de Produtos",
-  "short_name": "Produtos",
-  "start_url": "/index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3498db",
+  "name": "PRODUTOS",
+  "short_name": "PRODUTOS",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
@@ -15,6 +11,15 @@
       "src": "icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "icons/apple.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
-  ]
+  ],
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3498db"
 }

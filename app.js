@@ -1,4 +1,4 @@
-// app.js - Sistema completo com abas
+// app.js - Sistema completo com abas e inputs em CAIXA ALTA
 
 let db;
 
@@ -36,12 +36,42 @@ const initDB = () => {
   });
 };
 
+// Configura inputs para CAIXA ALTA
+function configurarInputsCaixaAlta() {
+  const inputs = document.querySelectorAll(`
+    #produto-nome,
+    .ingrediente-nome,
+    .ingrediente-unidade,
+    #search-input
+  `);
+  
+  inputs.forEach(input => {
+    // Converter valor existente
+    if (input.value) input.value = input.value.toUpperCase();
+    
+    // Configurar para converter enquanto digita
+    input.addEventListener('input', function() {
+      const cursorPosition = this.selectionStart;
+      this.value = this.value.toUpperCase();
+      this.setSelectionRange(cursorPosition, cursorPosition);
+    });
+    
+    // Configurar para converter ao colar texto
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text').toUpperCase();
+      document.execCommand('insertText', false, text);
+    });
+  });
+}
+
 // Inicializa o aplicativo
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await initDB();
     setupForm();
     adicionarIngrediente(); // Adiciona um campo de ingrediente por padrão
+    configurarInputsCaixaAlta(); // Configura os inputs para CAIXA ALTA
     
     // Configura o Service Worker para PWA
     if ('serviceWorker' in navigator) {
@@ -62,6 +92,7 @@ function setupForm() {
   form.onreset = () => {
     document.getElementById('ingredientes-container').innerHTML = '';
     adicionarIngrediente();
+    configurarInputsCaixaAlta(); // Reconfigura os inputs após reset
     form.onsubmit = adicionarProduto;
   };
 }
@@ -72,19 +103,20 @@ function adicionarIngrediente() {
   const div = document.createElement('div');
   div.className = 'ingrediente';
   div.innerHTML = `
-    <input type="text" placeholder="Nome do ingrediente" class="ingrediente-nome" required>
-    <input type="number" placeholder="Quantidade" class="ingrediente-qtd" step="0.01" min="0" required>
+    <input type="text" placeholder="NOME DO INGREDIENTE" class="ingrediente-nome" required>
+    <input type="number" placeholder="QUANTIDADE" class="ingrediente-qtd" step="0.01" min="0" required>
     <select class="ingrediente-unidade" required>
-      <option value="">Unidade</option>
-      <option value="g">g</option>
-      <option value="kg">kg</option>
-      <option value="ml">ml</option>
+      <option value="">UNIDADE</option>
+      <option value="G">G</option>
+      <option value="KG">KG</option>
+      <option value="ML">ML</option>
       <option value="L">L</option>
-      <option value="un">unidades</option>
+      <option value="UN">UNIDADES</option>
     </select>
     <button type="button" class="remove-button" onclick="this.parentElement.remove()">×</button>
   `;
   container.appendChild(div);
+  configurarInputsCaixaAlta(); // Configura os novos inputs
 }
 
 // Adiciona um novo produto
@@ -95,13 +127,17 @@ async function adicionarProduto(event) {
   const ingredientes = coletarIngredientes();
   
   if (!nome || ingredientes.length === 0) {
-    alert("Por favor, preencha o nome do produto e pelo menos um ingrediente válido");
+    alert("POR FAVOR, PREENCHA O NOME DO PRODUTO E PELO MENOS UM INGREDIENTE VÁLIDO");
     return;
   }
 
   const produto = {
-    nome,
-    formula: ingredientes,
+    nome: nome.toUpperCase(), // Garante caixa alta no nome
+    formula: ingredientes.map(ing => ({
+      ingrediente: ing.ingrediente.toUpperCase(), // Garante caixa alta nos ingredientes
+      quantidade: ing.quantidade,
+      unidade: ing.unidade.toUpperCase() // Garante caixa alta nas unidades
+    })),
     dataCriacao: new Date().toISOString()
   };
 
@@ -111,7 +147,7 @@ async function adicionarProduto(event) {
     });
     
     produto.id = id;
-    mostrarNotificacao('Produto adicionado com sucesso!');
+    mostrarNotificacao('PRODUTO ADICIONADO COM SUCESSO!');
     event.target.reset();
     document.getElementById('ingredientes-container').innerHTML = '';
     adicionarIngrediente();
@@ -122,7 +158,7 @@ async function adicionarProduto(event) {
     }
   } catch (error) {
     console.error("Erro ao adicionar produto:", error);
-    mostrarNotificacao('Erro ao salvar o produto', 'error');
+    mostrarNotificacao('ERRO AO SALVAR O PRODUTO', 'error');
   }
 }
 
@@ -140,7 +176,7 @@ function coletarIngredientes() {
 // Lista todos os produtos
 async function listarProdutos() {
   const ul = document.getElementById('lista-produtos');
-  ul.innerHTML = '<li>Carregando produtos...</li>';
+  ul.innerHTML = '<li>CARREGANDO PRODUTOS...</li>';
   
   try {
     const produtos = await executarTransacao('produtos', 'readonly', store => {
@@ -150,7 +186,7 @@ async function listarProdutos() {
     ul.innerHTML = '';
     
     if (produtos.length === 0) {
-      ul.innerHTML = '<li>Nenhum produto cadastrado ainda.</li>';
+      ul.innerHTML = '<li>NENHUM PRODUTO CADASTRADO AINDA.</li>';
       return;
     }
     
@@ -170,35 +206,35 @@ async function listarProdutos() {
       li.className = 'produto-item';
       li.innerHTML = `
         <div class="produto-nome">${produto.nome}</div>
-        <div class="produto-data">Criado em: ${formatarData(produto.dataCriacao)}</div>
+        <div class="produto-data">CRIADO EM: ${formatarData(produto.dataCriacao)}</div>
         <ul class="ingredientes-list">
           ${produto.formula.map(ing => `
-            <li>${ing.quantidade} ${ing.unidade} de ${ing.ingrediente}</li>
+            <li>${ing.quantidade} ${ing.unidade} DE ${ing.ingrediente}</li>
           `).join('')}
         </ul>
         <div class="produto-acoes">
-          <button class="action-button edit-button" onclick="editarProduto(${produto.id})">Editar</button>
-          <button class="action-button delete-button" onclick="removerProduto(${produto.id})">Excluir</button>
+          <button class="action-button edit-button" onclick="editarProduto(${produto.id})">EDITAR</button>
+          <button class="action-button delete-button" onclick="removerProduto(${produto.id})">EXCLUIR</button>
         </div>
       `;
       ul.appendChild(li);
     });
   } catch (error) {
-    console.error("Erro ao carregar produtos:", error);
-    ul.innerHTML = '<li>Erro ao carregar produtos. Recarregue a página.</li>';
+    console.error("ERRO AO CARREGAR PRODUTOS:", error);
+    ul.innerHTML = '<li>ERRO AO CARREGAR PRODUTOS. RECARREGUE A PÁGINA.</li>';
   }
 }
 
 // Busca produtos por nome
 async function buscarProdutos() {
-  const termo = document.getElementById('search-input').value.trim().toLowerCase();
+  const termo = document.getElementById('search-input').value.trim().toUpperCase();
   if (!termo) {
     listarProdutos();
     return;
   }
   
   const ul = document.getElementById('lista-produtos');
-  ul.innerHTML = '<li>Buscando produtos...</li>';
+  ul.innerHTML = '<li>BUSCANDO PRODUTOS...</li>';
   
   try {
     const produtos = await executarTransacao('produtos', 'readonly', store => {
@@ -206,14 +242,14 @@ async function buscarProdutos() {
     });
     
     const resultados = produtos.filter(produto => 
-      produto.nome.toLowerCase().includes(termo) ||
-      produto.formula.some(ing => ing.ingrediente.toLowerCase().includes(termo))
+      produto.nome.toUpperCase().includes(termo) ||
+      produto.formula.some(ing => ing.ingrediente.toUpperCase().includes(termo))
     );
     
     ul.innerHTML = '';
     
     if (resultados.length === 0) {
-      ul.innerHTML = '<li>Nenhum produto encontrado.</li>';
+      ul.innerHTML = '<li>NENHUM PRODUTO ENCONTRADO.</li>';
       return;
     }
     
@@ -222,22 +258,22 @@ async function buscarProdutos() {
       li.className = 'produto-item';
       li.innerHTML = `
         <div class="produto-nome">${produto.nome}</div>
-        <div class="produto-data">Criado em: ${formatarData(produto.dataCriacao)}</div>
+        <div class="produto-data">CRIADO EM: ${formatarData(produto.dataCriacao)}</div>
         <ul class="ingredientes-list">
           ${produto.formula.map(ing => `
-            <li>${ing.quantidade} ${ing.unidade} de ${ing.ingrediente}</li>
+            <li>${ing.quantidade} ${ing.unidade} DE ${ing.ingrediente}</li>
           `).join('')}
         </ul>
         <div class="produto-acoes">
-          <button class="action-button edit-button" onclick="editarProduto(${produto.id})">Editar</button>
-          <button class="action-button delete-button" onclick="removerProduto(${produto.id})">Excluir</button>
+          <button class="action-button edit-button" onclick="editarProduto(${produto.id})">EDITAR</button>
+          <button class="action-button delete-button" onclick="removerProduto(${produto.id})">EXCLUIR</button>
         </div>
       `;
       ul.appendChild(li);
     });
   } catch (error) {
-    console.error("Erro na busca:", error);
-    ul.innerHTML = '<li>Erro ao buscar produtos.</li>';
+    console.error("ERRO NA BUSCA:", error);
+    ul.innerHTML = '<li>ERRO AO BUSCAR PRODUTOS.</li>';
   }
 }
 
@@ -249,7 +285,7 @@ async function editarProduto(id) {
     });
     
     if (!produto) {
-      mostrarNotificacao('Produto não encontrado', 'error');
+      mostrarNotificacao('PRODUTO NÃO ENCONTRADO', 'error');
       return;
     }
     
@@ -266,6 +302,9 @@ async function editarProduto(id) {
       lastIng.querySelector('.ingrediente-unidade').value = ing.unidade;
     });
     
+    // Configura os inputs em CAIXA ALTA
+    configurarInputsCaixaAlta();
+    
     // Altera o submit para edição
     const form = document.getElementById('form-produto');
     form.onsubmit = async (e) => {
@@ -278,8 +317,8 @@ async function editarProduto(id) {
     document.getElementById('produto-nome').focus();
     
   } catch (error) {
-    console.error("Erro ao editar produto:", error);
-    mostrarNotificacao('Erro ao carregar produto para edição', 'error');
+    console.error("ERRO AO EDITAR PRODUTO:", error);
+    mostrarNotificacao('ERRO AO CARREGAR PRODUTO PARA EDIÇÃO', 'error');
   }
 }
 
@@ -289,7 +328,7 @@ async function atualizarProduto(id) {
   const ingredientes = coletarIngredientes();
   
   if (!nome || ingredientes.length === 0) {
-    mostrarNotificacao('Preencha todos os campos corretamente', 'error');
+    mostrarNotificacao('PREENCHA TODOS OS CAMPOS CORRETAMENTE', 'error');
     return;
   }
 
@@ -299,14 +338,18 @@ async function atualizarProduto(id) {
     });
     
     if (!produto) {
-      mostrarNotificacao('Produto não encontrado', 'error');
+      mostrarNotificacao('PRODUTO NÃO ENCONTRADO', 'error');
       return;
     }
     
     const produtoAtualizado = {
       ...produto,
-      nome,
-      formula: ingredientes,
+      nome: nome.toUpperCase(),
+      formula: ingredientes.map(ing => ({
+        ingrediente: ing.ingrediente.toUpperCase(),
+        quantidade: ing.quantidade,
+        unidade: ing.unidade.toUpperCase()
+      })),
       dataAtualizacao: new Date().toISOString()
     };
     
@@ -314,7 +357,7 @@ async function atualizarProduto(id) {
       return store.put(produtoAtualizado);
     });
     
-    mostrarNotificacao('Produto atualizado com sucesso!');
+    mostrarNotificacao('PRODUTO ATUALIZADO COM SUCESSO!');
     document.getElementById('form-produto').reset();
     document.getElementById('ingredientes-container').innerHTML = '';
     adicionarIngrediente();
@@ -325,14 +368,14 @@ async function atualizarProduto(id) {
       listarProdutos();
     }
   } catch (error) {
-    console.error("Erro ao atualizar produto:", error);
-    mostrarNotificacao('Erro ao atualizar produto', 'error');
+    console.error("ERRO AO ATUALIZAR PRODUTO:", error);
+    mostrarNotificacao('ERRO AO ATUALIZAR PRODUTO', 'error');
   }
 }
 
 // Remove um produto
 async function removerProduto(id) {
-  if (!confirm('Tem certeza que deseja excluir este produto permanentemente?')) {
+  if (!confirm('TEM CERTEZA QUE DESEJA EXCLUIR ESTE PRODUTO PERMANENTEMENTE?')) {
     return;
   }
   
@@ -341,11 +384,11 @@ async function removerProduto(id) {
       return store.delete(id);
     });
     
-    mostrarNotificacao('Produto removido com sucesso');
+    mostrarNotificacao('PRODUTO REMOVIDO COM SUCESSO');
     listarProdutos();
   } catch (error) {
-    console.error("Erro ao remover produto:", error);
-    mostrarNotificacao('Erro ao remover produto', 'error');
+    console.error("ERRO AO REMOVER PRODUTO:", error);
+    mostrarNotificacao('ERRO AO REMOVER PRODUTO', 'error');
   }
 }
 
@@ -378,7 +421,7 @@ function formatarData(dataString) {
 function mostrarNotificacao(mensagem, tipo = 'success') {
   const notification = document.createElement('div');
   notification.className = `notification ${tipo}`;
-  notification.textContent = mensagem;
+  notification.textContent = mensagem.toUpperCase(); // Notificações em CAIXA ALTA
   document.body.appendChild(notification);
   
   setTimeout(() => {
@@ -399,6 +442,9 @@ style.textContent = `
     color: white;
     z-index: 1000;
     animation: slide-in 0.5s ease-out;
+    text-transform: uppercase;
+    font-variant: small-caps;
+    letter-spacing: 1px;
   }
   
   .success {
@@ -421,6 +467,24 @@ style.textContent = `
   @keyframes fade-out {
     from { opacity: 1; }
     to { opacity: 0; }
+  }
+
+  /* Estilo para inputs em CAIXA ALTA */
+  #produto-nome,
+  .ingrediente-nome,
+  .ingrediente-unidade,
+  #search-input {
+    text-transform: uppercase;
+    font-variant: small-caps;
+    letter-spacing: 0.5px;
+  }
+
+  /* Placeholders em CAIXA ALTA */
+  #produto-nome::placeholder,
+  .ingrediente-nome::placeholder,
+  #search-input::placeholder {
+    text-transform: none;
+    font-variant: normal;
   }
 `;
 document.head.appendChild(style);
