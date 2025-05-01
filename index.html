@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Aplicativo PWA para gerenciamento de produtos com abas">
+  <title>Gestor de Produtos</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>Gestor de Produtos</h1>
+      <div class="tabs">
+        <button class="tab-button active" onclick="openTab('cadastro-tab')">Cadastrar</button>
+        <button class="tab-button" onclick="openTab('lista-tab')">Lista de Produtos</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Aba de Cadastro -->
+      <div id="cadastro-tab" class="tab-content active">
+        <form id="form-produto">
+          <div class="form-group">
+            <label for="produto-nome">Nome do Produto</label>
+            <input type="text" id="produto-nome" required>
+          </div>
+
+          <div class="form-group">
+            <label>Ingredientes</label>
+            <div id="ingredientes-container"></div>
+            <button type="button" class="add-button" onclick="adicionarIngrediente()">
+              ＋ Adicionar Ingrediente
+            </button>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-button">Salvar</button>
+            <button type="reset" class="secondary-button">Limpar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Aba de Listagem -->
+      <div id="lista-tab" class="tab-content">
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="Buscar produtos...">
+          <button onclick="buscarProdutos()" class="search-button">Buscar</button>
+        </div>
+
+        <div class="sort-options">
+          <select id="sort-select" onchange="listarProdutos()">
+            <option value="dataCriacao-desc">Mais recentes</option>
+            <option value="nome-asc">Nome (A-Z)</option>
+          </select>
+        </div>
+
+        <ul id="lista-produtos"></ul>
+      </div>
+    </main>
+
+    <footer>
+      <div class="connection-status" id="connection-status"></div>
+      <button id="install-button" class="install-button">Instalar App</button>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Controle das abas
+    function openTab(tabId) {
+      // Esconde todas as abas
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Remove a classe active de todos os botões
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      // Mostra a aba selecionada
+      document.getElementById(tabId).classList.add('active');
+      
+      // Ativa o botão correspondente
+      event.currentTarget.classList.add('active');
+      
+      // Se for a aba de listagem, atualiza a lista
+      if (tabId === 'lista-tab') {
+        listarProdutos();
+      }
+    }
+
+    // PWA Installation
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-button').style.display = 'block';
+    });
+
+    document.getElementById('install-button').addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          document.getElementById('install-button').style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    // Verificação de conexão
+    function updateConnectionStatus() {
+      const statusElement = document.getElementById('connection-status');
+      statusElement.textContent = navigator.onLine ? '✔ Online' : '✖ Offline - Trabalhando localmente';
+      statusElement.className = `connection-status ${navigator.onLine ? 'online' : 'offline'}`;
+    }
+
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    updateConnectionStatus();
+  </script>
+</body>
+</html>
